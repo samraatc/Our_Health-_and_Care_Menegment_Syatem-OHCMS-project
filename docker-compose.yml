@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # PHP/Apache Web Application
+  web:
+    build: .
+    container_name: ohcms_web
+    ports:
+      - "8001:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=hospital123
+      - DB_NAME=hospital
+    networks:
+      - ohcms_network
+
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: ohcms_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: hospital123
+      MYSQL_DATABASE: hospital
+      MYSQL_USER: ohcms_user
+      MYSQL_PASSWORD: ohcms123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/hospital.sql:/docker-entrypoint-initdb.d/hospital.sql
+    networks:
+      - ohcms_network
+
+  # phpMyAdmin for database management (optional)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: ohcms_phpmyadmin
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: hospital123
+    depends_on:
+      - db
+    networks:
+      - ohcms_network
+
+volumes:
+  mysql_data:
+
+networks:
+  ohcms_network:
+    driver: bridge
